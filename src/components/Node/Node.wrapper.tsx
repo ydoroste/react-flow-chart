@@ -1,33 +1,26 @@
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import Draggable, { DraggableData } from 'react-draggable'
 import ResizeObserver from 'react-resize-observer'
 import {
-  IConfig,
-  ILink,
-  INode,
-  INodeInnerDefaultProps,
-  IOnDragNode,
-  IOnDragNodeStop,
-  IOnLinkCancel,
-  IOnLinkComplete,
-  IOnLinkMove,
-  IOnLinkStart,
-  IOnNodeClick,
-  IOnNodeDoubleClick,
-  IOnNodeMouseEnter,
-  IOnNodeMouseLeave,
-  IOnNodeSizeChange,
-  IOnPortPositionChange,
-  IPortDefaultProps,
-  IPortsDefaultProps,
-  IPosition,
-  ISelectedOrHovered,
-  ISize,
-  PortWrapper,
+  IConfig, ILink, INode, INodeInnerDefaultProps, IOnDragNode,
+  IOnLinkCancel, IOnLinkComplete, IOnLinkMove, IOnLinkStart,
+  IOnNodeClick, IOnNodeSizeChange, IOnPortPositionChange,
+  IPortDefaultProps, IPortsDefaultProps, IPosition, ISelectedOrHovered, ISize, PortWrapper, IOnAddPort, Ichangeconfig, IonDeleteElement
 } from '../../'
+import SettingsIcon from '@material-ui/icons/Settings';
+import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
+import IconButton from '@material-ui/core/IconButton';
 import { noop } from '../../utils'
-import CanvasContext from '../Canvas/CanvasContext'
 import { INodeDefaultProps, NodeDefault } from './Node.default'
+import { green } from '@material-ui/core/colors';
+import FormElementEdit from '../form/form-element-edit'
+import Modal from './modal'
+
+const ports = {
+  id: 'port1',
+  type: 'input',
+}
 
 export interface INodeWrapperProps {
   config: IConfig
@@ -48,26 +41,21 @@ export interface INodeWrapperProps {
   onLinkComplete: IOnLinkComplete
   onLinkCancel: IOnLinkCancel
   onDragNode: IOnDragNode
-  onDragNodeStop: IOnDragNodeStop
   onNodeClick: IOnNodeClick
-  onNodeDoubleClick: IOnNodeDoubleClick
   onNodeSizeChange: IOnNodeSizeChange
-  onNodeMouseEnter: IOnNodeMouseEnter
-  onNodeMouseLeave: IOnNodeMouseLeave
+  onEditProperties: IOnAddPort
+  changeconfig: Ichangeconfig
+  onDeleteElement: IonDeleteElement
 }
 
 export const NodeWrapper = ({
   config,
   node,
   onDragNode,
-  onDragNodeStop,
   onNodeClick,
-  onNodeDoubleClick,
   isSelected,
   Component = NodeDefault,
   onNodeSizeChange,
-  onNodeMouseEnter,
-  onNodeMouseLeave,
   NodeInner,
   Ports,
   Port,
@@ -81,14 +69,13 @@ export const NodeWrapper = ({
   onLinkMove,
   onLinkComplete,
   onLinkCancel,
+  onEditProperties,
+  changeconfig,
+  onDeleteElement
 }: INodeWrapperProps) => {
-  const { zoomScale } = React.useContext(CanvasContext)
   const [size, setSize] = React.useState<ISize>({ width: 0, height: 0 })
-  const [portsSize, setPortsSize] = React.useState<ISize>({ width: 0, height: 0 })
 
   const isDragging = React.useRef(false)
-
-  const readonly = config.readonly || node.readonly || false
 
   const onStart = React.useCallback((e: MouseEvent) => {
     // Stop propagation so the canvas does not move
@@ -96,69 +83,58 @@ export const NodeWrapper = ({
     isDragging.current = false
   }, [])
 
-  const onDrag = React.useCallback(
-    (event: MouseEvent, data: DraggableData) => {
-      isDragging.current = true
-      onDragNode({ config, event, data, id: node.id })
-    },
-    [onDragNode, config, node.id],
-  )
+  const onDrag = React.useCallback((event: MouseEvent, data: DraggableData) => {
+    isDragging.current = true
+    onDragNode({ config, event, data, id: node.id })
+  }, [onDragNode, config, node.id])
 
-  const onStop = React.useCallback(
-    (event: MouseEvent, data: DraggableData) => {
-      onDragNodeStop({ config, event, data, id: node.id })
-    },
-    [onDragNodeStop, config, node.id],
-  )
-
-  const onClick = React.useCallback(
-    (e: React.MouseEvent) => {
-      if (!config.readonly || config.selectable) {
-        e.stopPropagation()
-        if (!isDragging.current) {
-          onNodeClick({ config, nodeId: node.id })
-        }
+  const onClick = React.useCallback((e: React.MouseEvent) => {
+    if (!config.readonly) {
+      e.stopPropagation()
+      if (!isDragging.current) {
+        // onNodeClick({ config, nodeId: node.id })
+        return
       }
-    },
-    [config, node.id],
-  )
-
-  const onDoubleClick = React.useCallback(
-    (e: React.MouseEvent) => {
-      if (!config.readonly) {
-        e.stopPropagation()
-        if (!isDragging.current) {
-          onNodeDoubleClick({ config, nodeId: node.id })
-        }
-      }
-    },
-    [config, node.id],
-  )
-
-  const onMouseEnter = React.useCallback(() => {
-    onNodeMouseEnter({ config, nodeId: node.id })
-  }, [config, node.id])
-
-  const onMouseLeave = React.useCallback(() => {
-    onNodeMouseLeave({ config, nodeId: node.id })
+    }
   }, [config, node.id])
 
   const compRef = React.useRef<HTMLElement>(null)
 
   // TODO: probably should add an observer to track node component size changes
   React.useLayoutEffect(() => {
-    const el = compRef.current as HTMLInputElement
+    const el = ReactDOM.findDOMNode(compRef.current) as HTMLInputElement
     if (el) {
-      if ((node.size && node.size.width) !== el.offsetWidth || (node.size && node.size.height) !== el.offsetHeight) {
+      if (
+        (node.size && node.size.width) !== el.offsetWidth ||
+        (node.size && node.size.height) !== el.offsetHeight
+      ) {
         const newSize = { width: el.offsetWidth, height: el.offsetHeight }
         setSize(newSize)
         onNodeSizeChange({ config, nodeId: node.id, size: newSize })
       }
     }
   }, [node, compRef.current, size.width, size.height])
-
+  const [isopen, setisopen] = React.useState(false);
+  const handleClose = () => {
+    setisopen(false);
+    changeconfig()
+  }
   const children = (
-    <div style={{ minWidth: portsSize.width, minHeight: portsSize.height }}>
+    <>
+      <div className='d-flex justify-content-between bg-light'>
+        <IconButton aria-label="delete" onClick={() => { changeconfig(); setisopen(!isopen) }} style={{ color: green[500] }}>
+          <SettingsIcon  />
+        </IconButton>
+        <IconButton aria-label="delete" onClick={() => onDeleteElement({ id: node.id, type: 'node' })}>
+          <DeleteForeverIcon  color="secondary" />
+        </IconButton>
+      </div>
+      <Modal
+        setClose={handleClose}
+        isopen={isopen}
+      >
+        <FormElementEdit element={node.properties} onEditProperties={onEditProperties} id={node.id} onClose={() => {setisopen(false);changeconfig() }} />
+      </Modal>
       <ResizeObserver
         onResize={(rect) => {
           const newSize = { width: rect.width, height: rect.height }
@@ -166,56 +142,54 @@ export const NodeWrapper = ({
         }}
       />
       <NodeInner node={node} config={config} />
+      {
+        node.ports &&
+        <Ports config={config}>
+          {Object.keys(node.ports).map((portId) => (
+            <PortWrapper
+              config={config}
+              key={portId}
+              offset={offset}
+              selected={selected}
+              selectedLink={selectedLink}
+              hoveredLink={hoveredLink}
+              hovered={hovered}
+              node={node}
+              port={node.ports ? node.ports[portId] : ports}
+              Component={Port}
+              onPortPositionChange={onPortPositionChange}
+              onLinkStart={config.readonly ? noop : onLinkStart}
+              onLinkMove={config.readonly ? noop : onLinkMove}
+              onLinkComplete={onLinkComplete}
+              onLinkCancel={onLinkCancel}
+            />
+          ))}
+        </Ports>
+      }
 
-      <Ports node={node} config={config} onResize={setPortsSize}>
-        {Object.keys(node.ports).map((portId) => (
-          <PortWrapper
-            config={config}
-            key={portId}
-            offset={offset}
-            selected={selected}
-            selectedLink={selectedLink}
-            hoveredLink={hoveredLink}
-            hovered={hovered}
-            node={node}
-            portsSize={portsSize}
-            port={node.ports[portId]}
-            Component={Port}
-            onPortPositionChange={onPortPositionChange}
-            onLinkStart={config.readonly ? noop : onLinkStart}
-            onLinkMove={config.readonly ? noop : onLinkMove}
-            onLinkComplete={onLinkComplete}
-            onLinkCancel={onLinkCancel}
-          />
-        ))}
-      </Ports>
-    </div>
+    </>
   )
 
   return (
+
     <Draggable
       bounds="parent"
       axis="both"
       position={node.position}
-      grid={[1,1]}
-      scale={zoomScale}
+      grid={[1, 1]}
       onStart={onStart}
       onDrag={onDrag}
-      onStop={onStop}
-      disabled={readonly}
-      nodeRef={compRef}
+      disabled={isopen}//config.readonly
     >
       <Component
         config={config}
         ref={compRef}
         children={children}
         onClick={onClick}
-        onDoubleClick={onDoubleClick}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
         isSelected={isSelected}
         node={node}
       />
     </Draggable>
+
   )
 }

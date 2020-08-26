@@ -1,12 +1,15 @@
 import * as React from 'react'
-import { FlowChart, IChart, IConfig, IFlowChartComponents } from '../'
+import { FlowChart, IChart, IConfig, IFlowChartComponents, IOnchangeChart } from '../'
 import * as actions from './actions'
 import mapValues from './utils/mapValues'
-
+import Button from '@material-ui/core/Button';
+// var deepEqual = require('deep-equal')
 export interface IFlowChartWithStateProps {
   initialValue: IChart
   Components?: IFlowChartComponents
   config?: IConfig
+  onChangeChart ?: IOnchangeChart
+
 }
 
 /**
@@ -19,18 +22,44 @@ export class FlowChartWithState extends React.Component<IFlowChartWithStateProps
 
   constructor (props: IFlowChartWithStateProps) {
     super(props)
-    this.state = props.initialValue
+    this.state = this.getStateFromProps(props)
+    // if (props.onChangeChart && !deepEqual(this.state, props.initialValue)){
+    //   console.log('deeeppp')
+    //   props.onChangeChart(this.state)
+    // }
   }
-  public render () {
-    const { Components, config } = this.props
-
+  // componentDidUpdate(prevProps: IFlowChartWithStateProps, prevState: object){
+  //   console.log('update')
+  //   console.log(this.state)
+  //   console.log(prevProps.initialValue)
+  //   if (this.props.onChangeChart && !deepEqual(this.state, prevProps.initialValue)){
+  //     console.log('deeeppp')
+  //     this.props.onChangeChart(this.state)
+  //   }
+  // }
+  getStateFromProps(props:IFlowChartWithStateProps){
+    const {initialValue} = props
+    return ({...initialValue})
+  }
+  
+  public render() {
+    // const [isopen, setisopen] = React.useState(false);
+    const {Components, config} = this.props
+    // console.log('chart rendered')
+    // onChangeChart&& onChangeChart(this.state)
+    // console.log(this.state)
     return (
-      <FlowChart
-        chart={this.state}
-        callbacks={this.stateActions}
-        Components={Components}
-        config={config}
-      />
+      <div className='form-builder'>
+          <Button variant="contained" onClick={()=> this.props.onChangeChart && this.props.onChangeChart(this.state)} className="referesh-from">پیش نمایش فرم</Button>
+          <FlowChart
+          chart={this.state}
+          callbacks={this.stateActions}
+          Components={Components}
+          config={config}
+          // changeconfig={()=>setisopen}
+        />
+      </div>
+        
     )
   }
 }

@@ -1,7 +1,7 @@
 import { cloneDeep, mapValues } from 'lodash'
 import * as React from 'react'
 import styled from 'styled-components'
-import { FlowChart } from '../src'
+// import { FlowChart } from '../src'
 import * as actions from '../src/container/actions'
 import { Content, Page, Sidebar } from './components'
 import { chartSimple } from './misc/exampleChartState'
@@ -38,10 +38,10 @@ export class SelectedSidebar extends React.Component {
     return (
       <Page>
         <Content>
-          <FlowChart
+          {/* <FlowChart
             chart={chart}
             callbacks={stateActions}
-          />
+          /> */}
         </Content>
         <Sidebar>
           { chart.selected.type

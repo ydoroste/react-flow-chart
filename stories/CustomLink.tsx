@@ -1,59 +1,59 @@
-import { cloneDeep, mapValues } from 'lodash'
+import { cloneDeep } from 'lodash'
 import * as React from 'react'
-import styled from 'styled-components'
-import { FlowChart, LinkDefault } from '../src'
-import * as actions from '../src/container/actions'
+// import styled from 'styled-components'
+// import { FlowChart, LinkDefault } from '../src'
+// import * as actions from '../src/container/actions'
 import { Page } from './components'
 import { chartSimple } from './misc/exampleChartState'
 
-const Label = styled.div`
-  position: absolute;
-`
+// const Label = styled.div`
+//   position: absolute;
+// `
 
-const Button = styled.div`
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  padding: 5px;
-  height: 15px;
-  width: 15px;
-  transform: translate(50%, -50%);
-  background: red;
-  color: white;
-  border-radius: 50%;
-  transition: 0.3s ease all;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  cursor: pointer;
-  &:hover {
-    box-shadow: 0 10px 20px rgba(0,0,0,.1);
-  }
-`
+// const Button = styled.div`
+//   position: absolute;
+//   top: 0px;
+//   right: 0px;
+//   padding: 5px;
+//   height: 15px;
+//   width: 15px;
+//   transform: translate(50%, -50%);
+//   background: red;
+//   color: white;
+//   border-radius: 50%;
+//   transition: 0.3s ease all;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: 10px;
+//   cursor: pointer;
+//   &:hover {
+//     box-shadow: 0 10px 20px rgba(0,0,0,.1);
+//   }
+// `
 
-const LabelContent = styled.div`
-  padding: 5px 10px;
-  background: cornflowerblue;
-  color: white;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  cursor: pointer;
-`
+// const LabelContent = styled.div`
+//   padding: 5px 10px;
+//   background: cornflowerblue;
+//   color: white;
+//   border-radius: 5px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: 10px;
+//   cursor: pointer;
+// `
 
 export class CustomLinkDemo extends React.Component {
   public state = cloneDeep(chartSimple)
   public render () {
-    const chart = this.state
-    const stateActions = mapValues(actions, (func: any) =>
-      (...args: any) => this.setState(func(...args))) as typeof actions
+    // const chart = this.state
+    // const stateActions = mapValues(actions, (func: any) =>
+    //   (...args: any) => this.setState(func(...args))) as typeof actions
 
     return (
       <Page>
-        <FlowChart
+        {/* <FlowChart
           chart={chart}
           callbacks={stateActions}
           Components={{
@@ -82,7 +82,7 @@ export class CustomLinkDemo extends React.Component {
               )
             },
           }}
-        />
+        /> */}
       </Page>
     )
   }

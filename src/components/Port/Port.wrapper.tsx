@@ -1,7 +1,11 @@
 import { isEqual } from 'lodash'
 import * as React from 'react'
+import * as ReactDOM from 'react-dom'
 import { v4 } from 'uuid'
-import { IConfig, ILink, INode, IOnLinkCancel, IOnLinkComplete, IOnLinkMove, IOnLinkStart, IOnPortPositionChange, IPort, IPosition, ISelectedOrHovered, ISize } from '../../'
+import {
+  IConfig, ILink, INode, IOnLinkCancel, IOnLinkComplete, IOnLinkMove,
+  IOnLinkStart, IOnPortPositionChange, IPort, IPosition, ISelectedOrHovered,
+} from '../../'
 import CanvasContext from '../Canvas/CanvasContext'
 import { IPortDefaultProps, PortDefault } from './Port.default'
 
@@ -25,7 +29,6 @@ export interface IPortWrapperProps {
   hoveredLink: ILink | undefined
   port: IPort
   node: INode
-  portsSize: ISize
   onPortPositionChange: IOnPortPositionChange
   Component: React.FunctionComponent<IPortDefaultProps>
 
@@ -42,17 +45,19 @@ export class PortWrapper extends React.Component<IPortWrapperProps> {
 
   private nodeRef = React.createRef<HTMLDivElement>()
 
-  public componentDidMount () {
-    this.updatePortPosition()
-  }
-
   public componentDidUpdate (prevProps: IPortWrapperProps) {
-    // Update port position after a re-render if there are more ports on the same side
-    // or if node.size has changed
-    if (this.portsOfType(this.props) !== this.portsOfType(prevProps)
-        || !isEqual(this.props.node.size, prevProps.node.size)
-        || !isEqual(this.props.portsSize, prevProps.portsSize)) {
-      this.updatePortPosition()
+    // Update port position after a re-render if node.size has changed
+    if (!isEqual(this.props.node.size, prevProps.node.size)) {
+      const el = ReactDOM.findDOMNode(this.nodeRef.current) as HTMLInputElement
+      if (el) {
+        // Ports component should be positions absolute
+        // Factor this in so we get position relative to the node
+        const nodesEl = el.parentElement
+          ? el.parentElement
+          : { offsetLeft: 0, offsetTop: 0 }
+        // update port position after node size has been determined
+        this.props.onPortPositionChange({ config: this.props.config, node: this.props.node, port: this.props.port, el, nodesEl })
+      }
     }
   }
 
@@ -61,21 +66,19 @@ export class PortWrapper extends React.Component<IPortWrapperProps> {
     const linkId = v4()
     const fromNodeId = node.id
     const fromPortId = port.id
+    const fromPortType = port.type
 
     // Create the move handler
     // This will update the position as the mouse moves
     const mouseMoveHandler = (e: MouseEvent) => {
-      const { offsetX, offsetY, zoomScale } = this.context
+      const { offsetX, offsetY } = this.context
 
       onLinkMove({
         config,
-        linkId,
-        startEvent,
-        fromNodeId,
-        fromPortId,
+        linkId, startEvent, fromNodeId, fromPortId,
         toPosition: {
-          x: (e.clientX - offsetX - offset.x) / zoomScale,
-          y: (e.clientY - offsetY - offset.y) / zoomScale,
+          x: e.clientX - offsetX - offset.x,
+          y: e.clientY - offsetY - offset.y,
         },
       })
     }
@@ -83,6 +86,7 @@ export class PortWrapper extends React.Component<IPortWrapperProps> {
     // Create and bind the mouse up handler
     // This is used to check if the link is complete or cancelled
     const mouseUpHandler = (e: MouseEvent) => {
+
       // We traverse up the event path until we find an element with 'data-port-id' and data-node-id'
       // e.toElement cannot be used because it may be a child element of the port
       const path = composedPath(e.target as HTMLElement)
@@ -108,8 +112,10 @@ export class PortWrapper extends React.Component<IPortWrapperProps> {
     }
 
     // Add listeners
-    window.addEventListener('mouseup', mouseUpHandler, false)
-    window.addEventListener('mousemove', mouseMoveHandler, false)
+    if(fromPortType !== 'input'){
+      window.addEventListener('mouseup', mouseUpHandler, false)
+      window.addEventListener('mousemove', mouseMoveHandler, false)
+    }
 
     // Notify state of link start
     onLinkStart({ config, linkId, startEvent, fromNodeId, fromPortId })
@@ -149,34 +155,13 @@ export class PortWrapper extends React.Component<IPortWrapperProps> {
                (selectedLink.to.portId === port.id && selectedLink.to.nodeId === node.id))
             : false
           }
-          isLinkHovered={
-            hoveredLink
-              ? (hoveredLink.from.portId === port.id &&
-                hoveredLink.from.nodeId === node.id) ||
-              (hoveredLink.to.portId === port.id &&
-                hoveredLink.to.nodeId === node.id)
-              : false
+          isLinkHovered={ hoveredLink
+            ? ((hoveredLink.from.portId === port.id && hoveredLink.from.nodeId === node.id) ||
+               (hoveredLink.to.portId === port.id && hoveredLink.to.nodeId === node.id))
+            : false
           }
         />
       </div>
     )
-  }
-
-  private updatePortPosition () {
-    const el = this.nodeRef.current as HTMLInputElement
-    if (el) {
-      // Ports component should be positions absolute
-      // Factor this in so we get position relative to the node
-      const nodesEl = el.parentElement
-        ? el.parentElement
-        : { offsetLeft: 0, offsetTop: 0 }
-      // update port position after node size has been determined
-      this.props.onPortPositionChange({ config: this.props.config, node: this.props.node, port: this.props.port, el, nodesEl })
-    }
-  }
-
-  private portsOfType (props: IPortWrapperProps) {
-    const { port: { type }, node: { ports } } = props
-    return Object.values(ports).reduce((count, port) => port.type === type ? count + 1 : count, 0)
   }
 }

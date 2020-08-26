@@ -3,7 +3,6 @@ import styled from 'styled-components'
 import { IConfig, INode } from '../../'
 
 export interface INodeInnerDefaultProps {
-  className?: string
   config: IConfig
   node: INode
 }
@@ -12,10 +11,11 @@ const Outer = styled.div`
   padding: 40px 30px;
 `
 
-export const NodeInnerDefault = ({ node,className }: INodeInnerDefaultProps) => {
+export const NodeInnerDefault = ({ node }: INodeInnerDefaultProps) => {
+  // console.log(node)
   return (
-    <Outer className={className}>
-      <div>Type: {node.type}</div>
+    <Outer>
+      <div className='d-flex justify-content-center align-items-center' >{node.properties? node.properties.display.label: node.type}</div>
     </Outer>
   )
 }

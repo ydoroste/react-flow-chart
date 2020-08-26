@@ -1,8 +1,8 @@
 import * as React from 'react'
 import styled from 'styled-components'
-import { FlowChartWithState } from '../src'
+// import { FlowChartWithState } from '../src'
 import { Page } from './components'
-import { chartSimple } from './misc/exampleChartState'
+// import { chartSimple } from './misc/exampleChartState'
 
 const Note = styled.div`
   position: absolute;
@@ -17,7 +17,7 @@ const Note = styled.div`
 export const ConfigValidateLinkDemo = () => {
   return (
     <Page>
-      <FlowChartWithState
+      {/* <FlowChartWithState
         initialValue={chartSimple}
         config={ {
           validateLink: ({ linkId, fromNodeId, fromPortId, toNodeId, toPortId, chart }): boolean => {
@@ -26,7 +26,7 @@ export const ConfigValidateLinkDemo = () => {
             return true
           },
         } }
-      />
+      /> */}
       <Note>Customise link validation. For example, only allow links between different Node Types</Note>
     </Page>
   )

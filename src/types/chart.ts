@@ -1,76 +1,61 @@
 import { IPosition, ISize } from './generics'
 
-export type IChart<
-  ChartProps = undefined,
-  NodeProps = undefined,
-  LinkProps = undefined,
-  PortProps = undefined
-  > = {
-    offset: IPosition
-    nodes: {
-      [id: string]: INode<NodeProps, PortProps>;
-    }
-    links: {
-      [id: string]: ILink<LinkProps>;
-    }
-    scale: number
-    /** System Temp */
-    selected: ISelectedOrHovered
-    hovered: ISelectedOrHovered,
-  } & (ChartProps extends undefined ? {
-    properties?: any,
-  } : {
-    properties: ChartProps,
-  })
+export interface IChart {
+  offset: IPosition
+  nodes: {
+    [id: string]: INode,
+  }
+  links: {
+    [id: string]: ILink,
+  }
+  properties?: any
+
+  /** System Temp */
+  selected: ISelectedOrHovered
+  hovered: ISelectedOrHovered
+}
+export interface ITest {
+  node?:string
+}
 
 export interface ISelectedOrHovered {
-  type?: 'link' | 'node' | 'port'
+  type?: 'link' | 'node' | 'port',
   id?: string
 }
 
-export type INode<NodeProps = undefined, PortProps = undefined> = {
+export interface INode {
   id: string
   type: string
   position: IPosition
   orientation?: number
-  readonly?: boolean
-  ports: {
-    [id: string]: IPort<PortProps>;
+  ports?: {
+    [id: string]: IPort,
   }
+  properties?: any
   /** System Temp */
-  size?: ISize,
-} & (NodeProps extends undefined ? {
-  properties?: any,
-} : {
-  properties: NodeProps,
-})
+  size?: ISize
+}
 
-export type IPort<PortProps = undefined> = {
+export interface IPort {
   id: string
   type: string
   value?: string
+  properties?: any
   /** System Temp */
-  position?: IPosition,
-} & (PortProps extends undefined ? {
-  properties?: any,
-} : {
-  properties: PortProps,
-})
+  position?: IPosition
+}
 
-export type ILink<LinkProps = undefined> = {
+export interface ILink {
   id: string
   from: {
     nodeId: string
     portId: string,
   }
   to: {
-    nodeId?: string;
-    portId?: string;
+    nodeId?: string
+    portId?: string
     /** System Temp */
-    position?: IPosition;
-  },
-} & (LinkProps extends undefined ? {
-  properties?: any,
-} : {
-  properties: LinkProps,
-})
+    position?: IPosition,
+  }
+  properties?: any
+}

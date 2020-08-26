@@ -2,7 +2,6 @@ import styled from 'styled-components'
 import { IConfig, IOnCanvasClick } from '../../'
 
 export interface ICanvasInnerDefaultProps {
-  className?: string
   config: IConfig
   children: any
   onClick: IOnCanvasClick
